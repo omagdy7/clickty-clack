@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import WordCard from './components/WordCard'
+import { document } from 'postcss'
 
 function App() {
 
   const wordsRef = useRef(null)
-
 
   const listOfWords = [
     {
@@ -61,30 +61,24 @@ function App() {
   useEffect(() => {
     // Function to handle key presses
     const handleKeyPress = (event) => {
+      const key = event.key;
+      console.log("key pressed = ", key);
+      if (wordsRef.current) {
+        const currentRef = wordsRef.current;
+        const children = [...currentRef.children];
+        const validElements = children.filter((item) => item.textContent[0] === key)
+        const closestElement = validElements.reduce((highest, current) => {
+          return current.top > highest.top ? current : highest;
+        }, validElements[0])
+        console.log(closestElement);
+        closestElement.style.color = 'green'
+      }
       // Check if a specific key is pressed
       if (event.key === 'Enter') {
         // Perform an action when the Enter key is pressed
         console.log('Enter key pressed');
       }
     };
-
-
-    const handleScroll = () => {
-      const windowHeight = window.innerHeight;
-      const elements = document.querySelectorAll('.word'); // Assumes you have a class "item" on your elements
-      console.log(elements)
-
-      elements.forEach((element) => {
-        const { top, bottom } = element.getBoundingClientRect();
-
-        if (bottom < 0 || top > windowHeight) {
-          // Element is out of view
-          const itemId = parseInt(element.getAttribute('data-id'));
-          setItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
-        }
-      });
-    };
-
 
 
     const intervalId = setInterval(() => {
@@ -96,17 +90,14 @@ function App() {
         const newWords = [...prevWords, newWord]
         return newWords
       })
-      setIndex((idx) => idx + 1)
     }, 1500)
 
     // Add the event listener when the component mounts
     window.addEventListener('keydown', handleKeyPress);
-    window.addEventListener('scroll', handleScroll);
 
     // Remove the event listener when the component unmounts
     return () => {
       window.removeEventListener('keydown', handleKeyPress);
-      window.removeEventListener('scroll', handleScroll);
       clearInterval(intervalId)
     };
   }, []); // Empty dependency array ensures this effect runs only once on mount
@@ -117,7 +108,7 @@ function App() {
       {
         words.map((word, idx) => {
           return (
-            <WordCard key={idx} word={word.word} kind={"normal"} posX={word.posX} intialPosY="0px" id={idx} />
+            <WordCard key={idx} word={word.word} kind={"normal"} posX={word.posX} intialPosY="0px" id={idx + ""} />
           )
         })
       }

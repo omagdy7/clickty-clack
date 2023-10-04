@@ -7,8 +7,9 @@ function WordCard({ word, kind, posX, intialPosY, id }) {
   const [width, setWidth] = useState("112px")
 
 
+  const fps = 20;
 
-  const deltaY = 2
+  const deltaY = 1
   const margin = 30
 
   useEffect(() => {
@@ -26,7 +27,7 @@ function WordCard({ word, kind, posX, intialPosY, id }) {
         const newPosY = num.toString() + "px"
         return newPosY
       })
-    }, 17)
+    }, 1000 / fps)
 
     return () => {
       clearInterval(intervalId)
@@ -36,7 +37,7 @@ function WordCard({ word, kind, posX, intialPosY, id }) {
 
   return (
     <>
-      <div className="word flex items-center font-bold text-2xl justify-center text-blue-500 bg-gray-800 mx-5 my-5 rounded-md px-3 h-12 absolute" style={{ top: posY, left: posX, width: width }} >
+      <div id={id} className="word flex items-center font-bold text-2xl justify-center text-blue-500 bg-gray-800 mx-5 my-5 rounded-md px-3 h-12 absolute" style={{ top: posY, left: posX, width: width }} >
         <p ref={textRef}>
           {word}
         </p>
