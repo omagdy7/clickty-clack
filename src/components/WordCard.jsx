@@ -1,18 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
 
-function WordCard({ word, kind }) {
+function WordCard({ word, kind, posX, intialPosY, id }) {
+
   const textRef = useRef(null);
-  const [posY, setPosY] = useState("15px")
+  const [posY, setPosY] = useState(intialPosY)
   const [width, setWidth] = useState("112px")
+
+
 
   const deltaY = 2
   const margin = 30
 
   useEffect(() => {
     if (textRef.current) {
-      setWidth((prevWidth) => {
+      setWidth(() => {
         const width = textRef.current.offsetWidth + margin;
-        console.log(word, " legnth =", textRef.current.offsetWidth);
         const newWidth = width + "px"
         return newWidth
       }
@@ -31,9 +33,10 @@ function WordCard({ word, kind }) {
     };
   }, []);
 
+
   return (
     <>
-      <div className="flex items-center font-bold text-2xl justify-center text-red-500 bg-gray-700 mx-5 my-5 rounded-md px-3 h-12 relative" style={{ top: posY, width: width }} >
+      <div className="word flex items-center font-bold text-2xl justify-center text-blue-500 bg-gray-800 mx-5 my-5 rounded-md px-3 h-12 absolute" style={{ top: posY, left: posX, width: width }} >
         <p ref={textRef}>
           {word}
         </p>
