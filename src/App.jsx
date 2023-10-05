@@ -5,11 +5,16 @@ import dictonary from "../assets/words.json"
 function App() {
 
   const wordsRef = useRef(null)
+  const maxHeight = window.innerHeight
 
-  const [words, setWords] = useState([{ word: "word", posX: getRandomInt(200, 1000) + "px" }])
+  const minX = 200
+  const maxX = 1700
+
+  const [words, setWords] = useState([{ word: "word", posX: getRandomInt(minX, maxX) + "px" }])
   const [curIdx, setCurIdx] = useState(0);
   const [curWord, setCurWord] = useState(null)
   const [isSet, setIsSet] = useState(true)
+  const [isGameOver, setIsGameOver] = useState(false)
 
   function getRandomInt(min, max) {
     min = Math.ceil(min);
@@ -23,18 +28,34 @@ function App() {
     const intervalId = setInterval(() => {
       setWords((prevWords) => {
         const randIdx = getRandomInt(0, listOfWords.length - 1);
-        const randX = getRandomInt(200, 1000) + "px";
+        const randX = getRandomInt(minX, maxX) + "px";
         const wordToModify = listOfWords[randIdx]
         const newWord = { ...wordToModify, posX: randX }
         const newWords = [...prevWords, newWord]
         return newWords
       })
-      setId((id) => id + 1)
     }, 2000)
+
+    const checkGameOver = setInterval(() => {
+      if (wordsRef.current) {
+        const currentRef = wordsRef.current;
+        const children = [...currentRef.children];
+        const closestElement = children.reduce((highest, current) => {
+          return current.top > highest.top ? current : highest;
+        }, children[0])
+        if (closestElement) {
+          const topValue = parseInt(closestElement.style.top, 10)
+          if (topValue > maxHeight) {
+            setIsGameOver(true)
+          }
+        }
+      }
+    }, 200)
 
 
     return () => {
       clearInterval(intervalId)
+      clearInterval(checkGameOver)
     };
   }, []);
 
@@ -47,7 +68,8 @@ function App() {
         if (isSet) {
           const currentRef = wordsRef.current;
           const children = [...currentRef.children];
-          const validElements = children.filter((item) => item.children[0].children[0].innerText === key)
+          console.log(children[0].classList)
+          const validElements = children.filter((item) => item.children[0].children[0].innerText === key && !item.classList.contains('animate-fade'))
           const closestElement = validElements.reduce((highest, current) => {
             return current.top > highest.top ? current : highest;
           }, validElements[0])
@@ -71,7 +93,10 @@ function App() {
               setCurIdx((idx) => idx + 1)
             }
             if (curIdx == lenWord - 1) {
-              curWord.parentNode.removeChild(curWord)
+              curWord.classList.toggle('animate-fade')
+              setTimeout(() => {
+                curWord.parentNode.removeChild(curWord)
+              }, 1000)
               setIsSet(true)
               setCurIdx(0)
             }
@@ -88,14 +113,16 @@ function App() {
   }, [curIdx, isSet]);
 
 
+  console.log(isGameOver);
+
   return (
     <div ref={wordsRef}>
-      {
+      {!isGameOver ? (
         words.map((word, idx) => {
           return (
             <WordCard key={idx} word={word["word"]} kind={"normal"} posX={word.posX} intialPosY="0px" id={idx} />
           )
-        })
+        })) : (<div></div>)
       }
     </div>
   )
