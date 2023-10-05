@@ -1,55 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import WordCard from './components/WordCard'
-import { document } from 'postcss'
+import dictonary from "../assets/words.json"
 
 function App() {
 
   const wordsRef = useRef(null)
 
-  const listOfWords = [
-    {
-      word: "china",
-      posX: "0px"
-    },
-    {
-      word: "botswana",
-      posX: "0px"
-    },
-    {
-      word: "iceland",
-      posX: "0px"
-    },
-    {
-      word: "australia",
-      posX: "0px"
-    },
-    {
-      word: "germany",
-      posX: "0px"
-    },
-    {
-      word: "egypt",
-      posX: "0px",
-    },
-    {
-      word: "cool",
-      posX: "0px",
-    },
-    {
-      word: "warm",
-      posX: "0px",
-    },
-    {
-      word: "random",
-      posX: "0px",
-    },
-    {
-      word: "glamorous",
-      posX: "0px",
-    },
-  ]
-
-  const [words, setWords] = useState([{ word: "word", posX: getRandomInt(0, 1700) + "px" }])
+  const [words, setWords] = useState([{ word: "word", posX: getRandomInt(200, 1000) + "px" }])
   const [curIdx, setCurIdx] = useState(0);
   const [curWord, setCurWord] = useState(null)
   const [isSet, setIsSet] = useState(true)
@@ -60,18 +17,20 @@ function App() {
     return Math.floor(Math.random() * (max - min)) + min;
   }
 
+  const listOfWords = dictonary["listOfWords"]
 
   useEffect(() => {
     const intervalId = setInterval(() => {
       setWords((prevWords) => {
         const randIdx = getRandomInt(0, listOfWords.length - 1);
-        const randX = getRandomInt(200, 1700) + "px";
+        const randX = getRandomInt(200, 1000) + "px";
         const wordToModify = listOfWords[randIdx]
         const newWord = { ...wordToModify, posX: randX }
         const newWords = [...prevWords, newWord]
         return newWords
       })
-    }, 1000)
+      setId((id) => id + 1)
+    }, 2000)
 
 
     return () => {
@@ -88,7 +47,7 @@ function App() {
         if (isSet) {
           const currentRef = wordsRef.current;
           const children = [...currentRef.children];
-          const validElements = children.filter((item) => item.children[0].children[curIdx].innerText === key)
+          const validElements = children.filter((item) => item.children[0].children[0].innerText === key)
           const closestElement = validElements.reduce((highest, current) => {
             return current.top > highest.top ? current : highest;
           }, validElements[0])
@@ -100,7 +59,9 @@ function App() {
               setCurIdx((idx) => idx + 1)
             }
           }
-          setIsSet(false)
+          if (validElements.length != 0) {
+            setIsSet(false)
+          }
         } else {
           if (curWord) {
             const lenWord = curWord.children[0].children.length
@@ -114,7 +75,6 @@ function App() {
               setIsSet(true)
               setCurIdx(0)
             }
-            console.log(curIdx, lenWord);
           }
         }
       }
@@ -127,12 +87,13 @@ function App() {
 
   }, [curIdx, isSet]);
 
+
   return (
     <div ref={wordsRef}>
       {
         words.map((word, idx) => {
           return (
-            <WordCard key={idx} word={word.word} kind={"normal"} posX={word.posX} intialPosY="0px" id={idx + ""} />
+            <WordCard key={idx} word={word["word"]} kind={"normal"} posX={word.posX} intialPosY="0px" id={idx} />
           )
         })
       }

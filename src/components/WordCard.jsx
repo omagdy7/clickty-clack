@@ -6,7 +6,6 @@ function WordCard({ word, kind, posX, intialPosY, id }) {
   const [posY, setPosY] = useState(intialPosY)
   const [width, setWidth] = useState("112px")
 
-
   const fps = 60;
 
   const deltaY = 1
