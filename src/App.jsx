@@ -4,13 +4,15 @@ import dictonary from "../assets/words.json"
 
 function App() {
 
-  const wordsRef = useRef(null)
-  const maxHeight = window.innerHeight
 
+  const listOfWords = dictonary["listOfWords"]
+  const maxHeight = window.innerHeight
+  const spawnTime = 2000
+  const green = "#09db2f"
   const minX = 200
   const maxX = 1700
 
-  const [words, setWords] = useState([{ word: "word", posX: getRandomInt(minX, maxX) + "px" }])
+  const [words, setWords] = useState([{ word: listOfWords[getRandomInt(0, listOfWords.length - 1)]["word"], posX: getRandomInt(minX, maxX) + "px" }])
   const [curIdx, setCurIdx] = useState(0);
   const [curWord, setCurWord] = useState(null)
   const [isSet, setIsSet] = useState(true)
@@ -22,7 +24,7 @@ function App() {
     return Math.floor(Math.random() * (max - min)) + min;
   }
 
-  const listOfWords = dictonary["listOfWords"]
+  const wordsRef = useRef(null)
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -34,7 +36,7 @@ function App() {
         const newWords = [...prevWords, newWord]
         return newWords
       })
-    }, 2000)
+    }, spawnTime)
 
     const checkGameOver = setInterval(() => {
       if (wordsRef.current) {
@@ -45,7 +47,7 @@ function App() {
         }, children[0])
         if (closestElement) {
           const topValue = parseInt(closestElement.style.top, 10)
-          if (topValue > maxHeight) {
+          if (topValue > maxHeight - 48) {
             setIsGameOver(true)
           }
         }
@@ -64,20 +66,20 @@ function App() {
 
     const handleKeyPress = (event) => {
       const key = event.key;
+      console.log(curIdx)
       if (wordsRef.current) {
         if (isSet) {
           const currentRef = wordsRef.current;
           const children = [...currentRef.children];
-          console.log(children[0].classList)
           const validElements = children.filter((item) => item.children[0].children[0].innerText === key && !item.classList.contains('animate-fade'))
           const closestElement = validElements.reduce((highest, current) => {
             return current.top > highest.top ? current : highest;
           }, validElements[0])
           setCurWord(closestElement);
           if (closestElement) {
-            const curSpan = closestElement.children[0].children[curIdx]
+            const curSpan = closestElement.children[0].children[0]
             if (curSpan.innerText === key) {
-              curSpan.style.color = 'green'
+              curSpan.style.color = green
               setCurIdx((idx) => idx + 1)
             }
           }
@@ -88,17 +90,19 @@ function App() {
           if (curWord) {
             const lenWord = curWord.children[0].children.length
             const curSpan = curWord.children[0].children[curIdx]
+            console.log("char: ", curSpan.innerText, "key: ", key)
             if (curSpan.innerText === key) {
-              curSpan.style.color = 'green'
+              curSpan.style.color = green
               setCurIdx((idx) => idx + 1)
-            }
-            if (curIdx == lenWord - 1) {
-              curWord.classList.toggle('animate-fade')
-              setTimeout(() => {
-                curWord.parentNode.removeChild(curWord)
-              }, 1000)
-              setIsSet(true)
-              setCurIdx(0)
+              if (curIdx === lenWord - 1) {
+                console.log(curIdx, lenWord - 1)
+                curWord.classList.toggle('animate-fade')
+                setTimeout(() => {
+                  curWord.parentNode.removeChild(curWord)
+                }, 1000)
+                setIsSet(true)
+                setCurIdx(0)
+              }
             }
           }
         }
@@ -113,7 +117,6 @@ function App() {
   }, [curIdx, isSet]);
 
 
-  console.log(isGameOver);
 
   return (
     <div ref={wordsRef}>

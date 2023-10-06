@@ -1,3 +1,15 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html {
+  background: rgb(23, 23, 23);
+  background-image: url('../assets/wooden_background.jpg');
+  background-size: cover;
+}
+
+.wood{
+  text-align: center;
+  text-shadow: -1px -1px rgba(0,0,0,0.5), 1px 1px rgba(255,255,255,0.5);
+  color: rgba(139,69,19,0.4);
+}
