@@ -38,7 +38,7 @@ function WordCard({ word, kind, posX, intialPosY, id }) {
 
   return (
     <>
-      <div id={id} className="border-black border-2 bg-contain bg-[url('../../assets/wooden_texture.jpg')] flex items-center font-bold text-2xl justify-center text-blue-500 bg-amber-600 mx-5 my-5 rounded-md px-3 h-12 absolute" style={{ top: posY, left: posX, width: width }} >
+      <div id={id} className="border-black border-2 bg-contain bg-[url('../../assets/wooden_texture.jpg')] flex items-center font-bold text-2xl justify-center text-blue-500 bg-amber-600 mx-5 my-5 rounded-lg px-3 h-12 absolute" style={{ top: posY, left: posX, width: width }} >
         <div className="word wood" ref={textRef}>
           {
             word.split('').map((ch, idx) =>

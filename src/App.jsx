@@ -1,16 +1,21 @@
 import { useState, useEffect, useRef } from 'react'
 import WordCard from './components/WordCard'
+import typeclick from '../assets/mixkit-typewriter-hard-hit-1367.wav'
+import returnClick from '../assets/mixkit-typewriter-classic-return-1381.wav'
+import bgMusic from '../assets/background_music.mp3'
 import dictonary from "../assets/words.json"
 
 function App() {
-
-
   const listOfWords = dictonary["listOfWords"]
   const maxHeight = window.innerHeight
   const spawnTime = 2000
-  const green = "#09db2f"
+  const rightCharColor = "#0284c7"
+  const shadowBoxColor = "#06b6d4"
   const minX = 200
   const maxX = 1700
+
+  const click = new Audio(typeclick)
+  const finishClick = new Audio(returnClick)
 
   const [words, setWords] = useState([{ word: listOfWords[getRandomInt(0, listOfWords.length - 1)]["word"], posX: getRandomInt(minX, maxX) + "px" }])
   const [curIdx, setCurIdx] = useState(0);
@@ -25,6 +30,17 @@ function App() {
   }
 
   const wordsRef = useRef(null)
+
+  useEffect(() => {
+    const gameLoopMusic = new Audio(bgMusic)
+    gameLoopMusic.loop = true;
+    gameLoopMusic.play()
+
+    return () => {
+      gameLoopMusic.pause();
+      gameLoopMusic.currentTime = 0;
+    }
+  }, [])
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -66,6 +82,7 @@ function App() {
 
     const handleKeyPress = (event) => {
       const key = event.key;
+      click.play()
       console.log(curIdx)
       if (wordsRef.current) {
         if (isSet) {
@@ -79,7 +96,9 @@ function App() {
           if (closestElement) {
             const curSpan = closestElement.children[0].children[0]
             if (curSpan.innerText === key) {
-              curSpan.style.color = green
+              curSpan.style.color = rightCharColor
+              closestElement.style.boxShadow = `0px 0px 8px 7px ${shadowBoxColor}`
+              closestElement.style.borderColor = "transparent"
               setCurIdx((idx) => idx + 1)
             }
           }
@@ -90,12 +109,12 @@ function App() {
           if (curWord) {
             const lenWord = curWord.children[0].children.length
             const curSpan = curWord.children[0].children[curIdx]
-            console.log("char: ", curSpan.innerText, "key: ", key)
             if (curSpan.innerText === key) {
-              curSpan.style.color = green
+              curSpan.style.color = rightCharColor
               setCurIdx((idx) => idx + 1)
               if (curIdx === lenWord - 1) {
                 console.log(curIdx, lenWord - 1)
+                finishClick.play()
                 curWord.classList.toggle('animate-fade')
                 setTimeout(() => {
                   curWord.parentNode.removeChild(curWord)
