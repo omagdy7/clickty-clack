@@ -5,16 +5,3 @@ function Char({ char, color }) {
 }
 
 export default Char;
-
-
-
-
-
-
-
-
-
-
-
-
-

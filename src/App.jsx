@@ -2,28 +2,39 @@ import { useState, useEffect, useRef } from 'react'
 import WordCard from './components/WordCard'
 import typeclick from './assets/mixkit-typewriter-hard-hit-1367.wav'
 import returnClick from './assets/mixkit-typewriter-classic-return-1381.wav'
+import timeStop from './assets/time_stop.mp3'
 import bgMusic from './assets/background_music.mp3'
 import dictonary from "./assets/words.json"
+import TypedKeysDisplay from './components/TypedKeysDisplay'
+import RightBar from './components/RightBar'
 
 function App() {
   // Constants
   const listOfWords = dictonary["listOfWords"]
   const rightCharColor = "#0284c7"
   const shadowBoxColor = "#06b6d4"
-  const normalCharColor = "rgba(139,69,19,0.5)"
+  const normalCharColor = "#1c0301"
   const maxHeight = window.innerHeight
-  const minX = 200
-  const maxX = 1600
+  const maxWidth = window.innerWidth
+  const minX = Math.floor(0.2 * maxWidth)
+  const maxX = innerWidth - minX - 60 // 60 magic number!!
   const spawnTime = 2000
   const click = new Audio(typeclick)
   const finishClick = new Audio(returnClick)
+  const slowTime = new Audio(timeStop)
+
+  click.volume = 0.4
+  finishClick.volume = 0.3
+  slowTime.volume = 0.5
 
   // States
-  const [words, setWords] = useState([{ word: listOfWords[getRandomInt(0, listOfWords.length - 1)]["word"], posX: getRandomInt(minX, maxX) + "px" }])
+  const [words, setWords] = useState([{ word: listOfWords[getRandomInt(0, listOfWords.length - 1)]["word"], posX: getRandomInt(minX, maxX) + "px", kind: "normal" }])
+  const [keyStrokes, setKeyStrokes] = useState([])
   const [curIdx, setCurIdx] = useState(0);
   const [curWord, setCurWord] = useState(null)
   const [isSet, setIsSet] = useState(true)
   const [isGameOver, setIsGameOver] = useState(false)
+  const [fps, setFps] = useState(60)
   const wordsRef = useRef(null)
 
   // Helper function
@@ -33,11 +44,31 @@ function App() {
     return Math.floor(Math.random() * (max - min)) + min;
   }
 
+  function getRandomEffect() {
+    // Generate a random number between 0 and 1 (inclusive of 0, exclusive of 1)
+    const randomValue = Math.random();
+
+    if (randomValue < 0.92) {
+      return "normal"; // 80% chance
+    } else {
+      const randomIndex = Math.floor(Math.random() * 3); // Random index from 0 to 2
+      switch (randomIndex) {
+        case 0:
+          return "fire";
+        case 1:
+          return "freeze";
+        case 2:
+          return "slow";
+      }
+    }
+  }
+
 
   // play background music
   useEffect(() => {
     const gameLoopMusic = new Audio(bgMusic)
-    gameLoopMusic.loop = true;
+    gameLoopMusic.volume = 0.4
+    gameLoopMusic.loop = true
     gameLoopMusic.play()
 
     return () => {
@@ -54,7 +85,7 @@ function App() {
         const randIdx = getRandomInt(0, listOfWords.length - 1);
         const randX = getRandomInt(minX, maxX) + "px";
         const wordToModify = listOfWords[randIdx]
-        const newWord = { ...wordToModify, posX: randX }
+        const newWord = { ...wordToModify, posX: randX, kind: getRandomEffect() }
         const newWords = [...prevWords, newWord]
         return newWords
       })
@@ -90,6 +121,7 @@ function App() {
       const key = event.key;
       click.play()
       if (key === 'Backspace') {
+        setKeyStrokes((strokes) => [...strokes.slice(0, -1)]);
         if (curWord) {
           setCurIdx((idx) => Math.max(0, idx - 1))
           if (curIdx - 1 === 0) {
@@ -118,6 +150,7 @@ function App() {
               closestElement.style.boxShadow = `0px 0px 8px 7px ${shadowBoxColor}`
               closestElement.style.borderColor = "transparent"
               setCurIdx((idx) => idx + 1)
+              setKeyStrokes((strokes) => [...strokes, key.toUpperCase()])
             }
           }
           if (validElements.length != 0) {
@@ -130,14 +163,20 @@ function App() {
             if (curSpan.innerText === key) {
               curSpan.style.color = rightCharColor
               setCurIdx((idx) => idx + 1)
+              setKeyStrokes((strokes) => [...strokes, key.toUpperCase()])
               if (curIdx === lenWord - 1) {
-                console.log(curIdx, lenWord - 1)
+                // slowTime.play()
                 finishClick.play()
                 curWord.classList.toggle('animate-fade')
                 setTimeout(() => {
                   curWord.parentNode.removeChild(curWord)
                 }, 1000)
                 setIsSet(true)
+                setKeyStrokes((strokes) => []);
+                // setTimeout(() => {
+                //   setFps(() => 60)
+                // }, 23000)
+                // setFps(() => 30)
                 setCurIdx(0)
               }
             }
@@ -156,14 +195,21 @@ function App() {
 
 
   return (
-    <div ref={wordsRef}>
-      {!isGameOver ? (
-        words.map((word, idx) => {
-          return (
-            <WordCard key={idx} word={word["word"]} kind={"normal"} posX={word.posX} intialPosY="0px" id={idx} />
-          )
-        })) : (<div></div>)
-      }
+    <div className="flex flex-row">
+      <RightBar />
+      <div className="cover flex flex-col w-full">
+        <div ref={wordsRef} className="h-[90vh]">
+          {!isGameOver ? (
+            words.map((word, idx) => {
+              return (
+                <WordCard key={idx} word={word["word"]} kind={word["kind"]} curFps={fps} posX={word.posX} intialPosY="0px" id={idx} />
+              )
+            })) : (<div></div>)
+          }
+        </div>
+        <TypedKeysDisplay keys={keyStrokes} />
+      </div>
+      <RightBar />
     </div>
   )
 }
