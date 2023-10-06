@@ -4,7 +4,7 @@
 
 html {
   background: rgb(23, 23, 23);
-  background-image: url('../assets/nathan-dumlao-J2gEgTPM_OA-unsplash.jpg');
+  background-image: url('./assets/nathan-dumlao-J2gEgTPM_OA-unsplash.jpg');
   background-size: cover;
 }
 
