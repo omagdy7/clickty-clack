@@ -2,8 +2,10 @@ import { useState, useEffect, useRef } from 'react'
 import WordCard from './components/WordCard'
 import typeclick from './assets/mixkit-typewriter-hard-hit-1367.wav'
 import returnClick from './assets/mixkit-typewriter-classic-return-1381.wav'
-import timeStop from './assets/time_stop.mp3'
+import timeSlow from './assets/time_stop.mp3'
 import bgMusic from './assets/background_music.mp3'
+import freezeSound from './assets/freeze.wav'
+import fireSound from './assets/fire.wav'
 import dictonary from "./assets/words.json"
 import TypedKeysDisplay from './components/TypedKeysDisplay'
 import RightBar from './components/RightBar'
@@ -21,20 +23,23 @@ function App() {
   const spawnTime = 2000
   const click = new Audio(typeclick)
   const finishClick = new Audio(returnClick)
-  const slowTime = new Audio(timeStop)
+  const slowTime = new Audio(timeSlow)
+  const freezeEffect = new Audio(freezeSound)
+  const fireEffect = new Audio(fireSound)
 
   click.volume = 0.4
   finishClick.volume = 0.3
   slowTime.volume = 0.5
 
   // States
-  const [words, setWords] = useState([{ word: listOfWords[getRandomInt(0, listOfWords.length - 1)]["word"], posX: getRandomInt(minX, maxX) + "px", kind: "normal" }])
+  const [words, setWords] = useState([{ word: listOfWords[getRandomInt(0, listOfWords.length - 1)]["word"], posX: getRandomInt(minX, maxX) + "px", kind: "normal", speed: 30 }])
+  const [curKind, setCurKind] = useState("normal")
   const [keyStrokes, setKeyStrokes] = useState([])
   const [curIdx, setCurIdx] = useState(0);
   const [curWord, setCurWord] = useState(null)
   const [isSet, setIsSet] = useState(true)
   const [isGameOver, setIsGameOver] = useState(false)
-  const [fps, setFps] = useState(60)
+  const [isFreezing, setIsFreezing] = useState(false)
   const wordsRef = useRef(null)
 
   // Helper function
@@ -48,7 +53,7 @@ function App() {
     // Generate a random number between 0 and 1 (inclusive of 0, exclusive of 1)
     const randomValue = Math.random();
 
-    if (randomValue < 0.92) {
+    if (randomValue < 0.60) {
       return "normal"; // 80% chance
     } else {
       const randomIndex = Math.floor(Math.random() * 3); // Random index from 0 to 2
@@ -80,15 +85,18 @@ function App() {
   // handle spawning and checks if game is over
   useEffect(() => {
     // spawn a word after spawnTime
-    const intervalId = setInterval(() => {
-      setWords((prevWords) => {
-        const randIdx = getRandomInt(0, listOfWords.length - 1);
-        const randX = getRandomInt(minX, maxX) + "px";
-        const wordToModify = listOfWords[randIdx]
-        const newWord = { ...wordToModify, posX: randX, kind: getRandomEffect() }
-        const newWords = [...prevWords, newWord]
-        return newWords
-      })
+    const spawner = setInterval(() => {
+      console.log(isFreezing)
+      if (!isFreezing) {
+        setWords((prevWords) => {
+          const randIdx = getRandomInt(0, listOfWords.length - 1);
+          const randX = getRandomInt(minX, maxX) + "px";
+          const wordToModify = listOfWords[randIdx]
+          const newWord = { ...wordToModify, posX: randX, kind: getRandomEffect(), speed: 30 }
+          const newWords = [...prevWords, newWord]
+          return newWords
+        })
+      }
     }, spawnTime)
 
     // Checks if the game is over duh...
@@ -99,9 +107,11 @@ function App() {
         const closestElement = children.reduce((highest, current) => {
           return current.top > highest.top ? current : highest;
         }, children[0]) // get the closese element from the bottom
+        console.log(closestElement)
         if (closestElement) {
           const topValue = parseInt(closestElement.style.top, 10)
-          if (topValue > maxHeight - 48) { // 48 is hardcoded which is bad figure out how to make it depends of the window size
+          // console.log(closestElement, topValue)
+          if (topValue > maxHeight - 48) { // 48 is hardcoded which is bad. figure out how to make it depends of the window size
             setIsGameOver(true)
           }
         }
@@ -110,16 +120,17 @@ function App() {
 
     // clean up
     return () => {
-      clearInterval(intervalId)
+      clearInterval(spawner)
       clearInterval(checkGameOver)
     };
-  }, []);
+  }, [isFreezing]);
 
   // handle keypresses
   useEffect(() => {
     const handleKeyPress = (event) => {
       const key = event.key;
       click.play()
+
       if (key === 'Backspace') {
         setKeyStrokes((strokes) => [...strokes.slice(0, -1)]);
         if (curWord) {
@@ -142,7 +153,9 @@ function App() {
           const closestElement = validElements.reduce((highest, current) => {
             return current.top > highest.top ? current : highest;
           }, validElements[0]) // get closeest element from bottom
+
           setCurWord(closestElement);
+
           if (closestElement) {
             const curSpan = closestElement.children[0].children[0]
             if (curSpan.innerText === key) {
@@ -153,6 +166,7 @@ function App() {
               setKeyStrokes((strokes) => [...strokes, key.toUpperCase()])
             }
           }
+
           if (validElements.length != 0) {
             setIsSet(false)
           }
@@ -160,23 +174,50 @@ function App() {
           if (curWord) {
             const lenWord = curWord.children[0].children.length
             const curSpan = curWord.children[0].children[curIdx]
+            const tmp = curWord.innerText
+            setCurKind(words.find(word => word.word === tmp).kind)
             if (curSpan.innerText === key) {
               curSpan.style.color = rightCharColor
               setCurIdx((idx) => idx + 1)
               setKeyStrokes((strokes) => [...strokes, key.toUpperCase()])
               if (curIdx === lenWord - 1) {
-                // slowTime.play()
                 finishClick.play()
+                if (curKind === "fire") {
+                  fireEffect.play()
+                  setWords(() => [])
+                } else if (curKind === "slow") {
+                  slowTime.play()
+                  setTimeout(() => {
+                    setWords((words) => words.map(word => ({
+                      ...word,
+                      speed: 30,
+                    })))
+                  }, 20 * 1000)
+                  setWords((words) => words.map(word => ({
+                    ...word,
+                    speed: 15,
+                  })))
+                } else if (curKind === "freeze") {
+                  freezeEffect.play()
+                  setTimeout(() => {
+                    setWords((words) => words.map(word => ({
+                      ...word,
+                      speed: 30,
+                    })))
+                    setIsFreezing(() => false)
+                  }, 20 * 1000)
+                  setIsFreezing(true)
+                  setWords((words) => words.map(word => ({
+                    ...word,
+                    speed: 1,
+                  })))
+                }
                 curWord.classList.toggle('animate-fade')
                 setTimeout(() => {
                   curWord.parentNode.removeChild(curWord)
                 }, 1000)
                 setIsSet(true)
-                setKeyStrokes((strokes) => []);
-                // setTimeout(() => {
-                //   setFps(() => 60)
-                // }, 23000)
-                // setFps(() => 30)
+                setKeyStrokes((_) => []);
                 setCurIdx(0)
               }
             }
@@ -202,7 +243,7 @@ function App() {
           {!isGameOver ? (
             words.map((word, idx) => {
               return (
-                <WordCard key={idx} word={word["word"]} kind={word["kind"]} curFps={fps} posX={word.posX} intialPosY="0px" id={idx} />
+                <WordCard key={idx} word={word["word"]} kind={word["kind"]} curFps={word["speed"]} posX={word.posX} intialPosY="0px" id={idx} />
               )
             })) : (<div></div>)
           }

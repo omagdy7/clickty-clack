@@ -6,10 +6,12 @@ function WordCard({ word, kind, curFps, posX, intialPosY, id }) {
   const [posY, setPosY] = useState(intialPosY)
   const [width, setWidth] = useState("112px")
 
-  console.log(kind)
   const fps = curFps;
   const deltaY = 1
   const margin = 20
+
+  console.log(curFps)
+
 
   // adjust the wordCard width depending on the word size
   useEffect(() => {
@@ -32,7 +34,7 @@ function WordCard({ word, kind, curFps, posX, intialPosY, id }) {
     return () => {
       clearInterval(intervalId)
     };
-  }, []);
+  }, [fps]);
 
   let color = "white"
 
